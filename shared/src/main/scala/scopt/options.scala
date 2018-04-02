@@ -4,6 +4,11 @@ package scopt
 
 import collection.mutable.{ListBuffer, ListMap}
 
+class ScoptExitException(exitCode:Int, exitState: Either[String, Unit]) extends RuntimeException {
+  def getExitCode = exitCode
+  def getExitState = exitState
+}
+
 trait Read[A] { self =>
   def arity: Int
   def tokensToRead: Int = if (arity == 0) 0 else 1
@@ -215,7 +220,7 @@ private[scopt] case object Check extends OptionDefKind
  * }
  * }}}
  */
-abstract class OptionParser[C](programName: String) {
+abstract class OptionParser[C](programName: String, doExit:Boolean = true) {
   protected val options = new ListBuffer[OptionDef[_, C]]
   protected val helpOptions = new ListBuffer[OptionDef[_, C]]
 
@@ -224,11 +229,17 @@ abstract class OptionParser[C](programName: String) {
   def errorOnUnknownArgument: Boolean = true
   def showUsageOnError: Boolean = helpOptions.isEmpty
   def renderingMode: RenderingMode = RenderingMode.TwoColumns
-  def terminate(exitState: Either[String, Unit]): Unit =
-    exitState match {
-      case Left(_)  => sys.exit(1)
-      case Right(_) => sys.exit(0)
+
+  def terminate(exitState: Either[String, Unit]): Unit = {
+    val exitCode = exitState match {
+      case Left(_) => 1
+      case Right(_) => 0
     }
+    if (!doExit) {
+      throw new ScoptExitException(exitCode, exitState)
+    }
+    sys.exit(exitCode)
+  }
 
   def reportError(msg: String): Unit = {
     Console.err.println("Error: " + msg)

@@ -33,6 +33,7 @@ private[scopt] object platform {
       case e: NumberFormatException => Left(Seq(desc + " expects a number but was given '" + arg + "'"))
       case e: UnknownHostException  => Left(Seq(desc + " expects a host name or an IP address but was given '" + arg + "' which is invalid"))
       case e: ParseException        => Left(Seq(desc + " expects a Scala duration but was given '" + arg + "'"))
+      case e: ScoptExitException    => throw e
       case e: Throwable             => Left(Seq(desc + " failed when given '" + arg + "'. " + e.getMessage))
     }
 

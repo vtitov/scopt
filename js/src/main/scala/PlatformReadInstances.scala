@@ -27,6 +27,7 @@ private[scopt] object platform {
   def applyArgumentExHandler[C](desc: String, arg: String): PartialFunction[Throwable, Either[Seq[String], C]] = {
     case e: NumberFormatException => Left(Seq(desc + " expects a number but was given '" + arg + "'"))
     case e: ParseException        => Left(Seq(desc + " expects a Scala duration but was given '" + arg + "'"))
+    case e: ScoptExitException    => throw e
     case e: Throwable             => Left(Seq(desc + " failed when given '" + arg + "'. " + e.getMessage))
   }
 }
